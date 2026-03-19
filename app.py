@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from src.scraper import scrape_reddit
+from src.scraper import scrape_posts
 from src.preprocess import preprocess_dataframe
 from src.classify import run_classification
 from src.trends import detect_trends
@@ -48,8 +48,8 @@ if "trend_results" not in st.session_state:
 if "insights" not in st.session_state:
     st.session_state.insights = {}
 
-st.title("AI-Assisted Research Prototype")
-st.caption("Internal analyst tool for scraping, preprocessing, classification, trend detection, insight generation, and report building.")
+st.title("AI-Assisted Research Monitoring Prototype")
+st.caption("Internal analyst tool for live social discourse monitoring, preprocessing, classification, trend detection, insight generation, and report building.")
 
 with st.sidebar:
     st.header("Workflow Controls")
@@ -57,14 +57,19 @@ with st.sidebar:
     st.subheader("1. Data Input")
     start_date = st.date_input("Start date", value=date.today().replace(day=max(1, date.today().day - 7)))
     end_date = st.date_input("End date", value=date.today())
-    platform = st.selectbox("Platform", ["Reddit"])
+    platform = st.selectbox("Platform", ["Bluesky"])
     subreddit = st.text_input("Subreddit (optional)", value="")
     query = st.text_input("Keyword / search query", value="antisemitism")
     max_posts = st.selectbox("Max posts", [25, 50, 100, 200], index=1)
 
     if st.button("Scrape Data", use_container_width=True):
         with st.spinner("Scraping live Reddit data..."):
-            df, scrape_error = scrape_reddit(query=query, subreddit=subreddit, max_posts=max_posts)
+            df = scrape_posts(
+    query=query,
+    subreddit=subreddit,
+    max_posts=max_posts,
+    platform=platform
+)
 
             if not df.empty:
                 df["date"] = pd.to_datetime(df["date"], errors="coerce")

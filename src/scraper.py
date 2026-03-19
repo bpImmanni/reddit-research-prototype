@@ -1,68 +1,63 @@
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 
 
-HEADERS = {
-    "User-Agent": "desktop:reddit_research_prototype:v1.0 (by /u/researchprototypebot)"
-}
+def scrape_posts(query, subreddit="", max_posts=50, platform="Bluesky"):
+    if platform == "Bluesky":
+        return scrape_bluesky(query=query, max_posts=max_posts)
+    return pd.DataFrame(columns=[
+        "date", "subreddit", "title", "body", "score", "num_comments", "url"
+    ])
 
 
-def scrape_reddit(query, subreddit="", max_posts=50):
-    """
-    Scrape Reddit search results using the public JSON endpoint.
-    Returns: (dataframe, error_message)
-    """
+def scrape_bluesky(query, max_posts=50):
     empty_df = pd.DataFrame(columns=[
         "date", "subreddit", "title", "body", "score", "num_comments", "url"
     ])
 
     if not query.strip():
-        return empty_df, "Query is empty."
+        return empty_df
 
-    if subreddit.strip():
-        full_query = f"{query} subreddit:{subreddit}"
-    else:
-        full_query = query
-
-    url = "https://www.reddit.com/search.json"
+    url = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
     params = {
-        "q": full_query,
-        "limit": max_posts,
-        "sort": "new",
-        "type": "link"
+        "q": query,
+        "limit": min(max_posts, 100),
+        "sort": "latest"
     }
 
     try:
-        response = requests.get(url, headers=HEADERS, params=params, timeout=20)
-        status_code = response.status_code
-
-        if status_code != 200:
-            return empty_df, f"Reddit request failed with status code {status_code}."
-
+        response = requests.get(url, params=params, timeout=20)
+        response.raise_for_status()
         payload = response.json()
-        children = payload.get("data", {}).get("children", [])
+    except Exception:
+        return empty_df
 
-        if not children:
-            return empty_df, "Reddit returned 0 matching posts for this query."
+    posts = payload.get("posts", [])
+    rows = []
 
-        rows = []
-        for item in children:
-            post = item.get("data", {})
-            created_utc = post.get("created_utc")
+    for item in posts:
+        record = item.get("record", {})
+        author = item.get("author", {})
+        created_at = record.get("createdAt")
 
-            rows.append({
-                "date": datetime.fromtimestamp(created_utc) if created_utc else None,
-                "subreddit": post.get("subreddit", ""),
-                "title": post.get("title", ""),
-                "body": post.get("selftext", ""),
-                "score": post.get("score", 0),
-                "num_comments": post.get("num_comments", 0),
-                "url": f"https://www.reddit.com{post.get('permalink', '')}" if post.get("permalink") else ""
-            })
+        parsed_date = None
+        if created_at:
+            try:
+                parsed_date = datetime.fromisoformat(created_at.replace("Z", "+00:00")).astimezone(timezone.utc)
+            except Exception:
+                parsed_date = None
 
-        df = pd.DataFrame(rows)
-        return df, None
+        text = record.get("text", "")
 
-    except Exception as e:
-        return empty_df, f"Request error: {str(e)}"
+        rows.append({
+            "date": parsed_date,
+            "subreddit": author.get("handle", "bluesky"),
+            "title": text[:80] if text else "",
+            "body": text,
+            "score": item.get("likeCount", 0),
+            "num_comments": item.get("replyCount", 0),
+            "url": f"https://bsky.app/profile/{author.get('handle', '')}/post/{item.get('uri', '').split('/')[-1]}" if author.get("handle") and item.get("uri") else ""
+        })
+
+    return pd.DataFrame(rows)
