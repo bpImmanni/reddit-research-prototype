@@ -28,7 +28,7 @@ def scrape_bluesky(query, max_posts=50):
     if not query.strip():
         return empty_df, "Query is empty."
 
-    url = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
+    url = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts"
     params = {
         "q": query,
         "limit": min(max_posts, 100),
@@ -63,19 +63,22 @@ def scrape_bluesky(query, max_posts=50):
                 parsed_date = datetime.fromisoformat(
                     created_at.replace("Z", "+00:00")
                 ).astimezone(timezone.utc)
-            except:
+            except Exception:
                 parsed_date = None
 
         text = record.get("text", "")
+        post_uri = item.get("uri", "")
+        post_id = post_uri.split("/")[-1] if post_uri else ""
+        handle = author.get("handle", "")
 
         rows.append({
             "date": parsed_date,
-            "subreddit": author.get("handle", "bluesky"),
-            "title": text[:80],
+            "subreddit": handle if handle else "bluesky",
+            "title": text[:80] if text else "",
             "body": text,
             "score": item.get("likeCount", 0),
             "num_comments": item.get("replyCount", 0),
-            "url": ""
+            "url": f"https://bsky.app/profile/{handle}/post/{post_id}" if handle and post_id else ""
         })
 
     return pd.DataFrame(rows), None
