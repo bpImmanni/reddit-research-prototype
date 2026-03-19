@@ -63,13 +63,13 @@ with st.sidebar:
     max_posts = st.selectbox("Max posts", [25, 50, 100, 200], index=1)
 
     if st.button("Scrape Data", use_container_width=True):
-        with st.spinner("Scraping live Reddit data..."):
-            df = scrape_posts(
-    query=query,
-    subreddit=subreddit,
-    max_posts=max_posts,
-    platform=platform
-)
+        with st.spinner("Scraping live social data..."):
+            df, scrape_error = scrape_posts(
+            query=query,
+            subreddit=subreddit,
+            max_posts=max_posts,
+            platform=platform
+        )
 
             if not df.empty:
                 df["date"] = pd.to_datetime(df["date"], errors="coerce")
