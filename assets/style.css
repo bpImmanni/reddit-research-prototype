@@ -1,0 +1,29 @@
+.block-container {
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+    max-width: 1500px;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #0F172A;
+}
+
+[data-testid="stSidebar"] * {
+    color: white;
+}
+
+div[data-testid="metric-container"] {
+    background: white;
+    border: 1px solid #E2E8F0;
+    padding: 14px;
+    border-radius: 14px;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: 10px 10px 0 0;
+    padding: 10px 16px;
+}
