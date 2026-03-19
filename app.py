@@ -64,15 +64,15 @@ with st.sidebar:
 
     if st.button("Scrape Data", use_container_width=True):
         with st.spinner("Scraping live Reddit data..."):
-            df = scrape_reddit(query=query, subreddit=subreddit, max_posts=max_posts)
+            df, scrape_error = scrape_reddit(query=query, subreddit=subreddit, max_posts=max_posts)
 
             if not df.empty:
                 df["date"] = pd.to_datetime(df["date"], errors="coerce")
                 df = df.dropna(subset=["date"]).copy()
                 df = df[
-                    (df["date"].dt.date >= start_date) &
-                    (df["date"].dt.date <= end_date)
-                ].copy()
+                (df["date"].dt.date >= start_date) &
+                (df["date"].dt.date <= end_date)
+            ].copy()
 
             st.session_state.raw_df = df
             st.session_state.processed_df = pd.DataFrame()
@@ -82,6 +82,11 @@ with st.sidebar:
             st.session_state.entities = []
             st.session_state.trend_results = {}
             st.session_state.insights = {}
+
+            if scrape_error:
+                st.error(scrape_error)
+            else:
+                st.success(f"Loaded {len(df)} posts.")
 
         st.success(f"Loaded {len(df)} posts.")
 

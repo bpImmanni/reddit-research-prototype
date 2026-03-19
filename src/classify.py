@@ -4,27 +4,27 @@ import pandas as pd
 TOPIC_RULES = {
     "antisemitic rhetoric": [
         "antisemitism", "antisemitic", "anti jewish", "anti-jewish",
-        "jew hatred", "jews are", "zionist pig", "dirty jew"
+        "jew hatred", "dirty jew", "jews are", "zionist pig"
     ],
     "conspiracy narratives": [
-        "globalist", "bankers", "media control", "replacement", "cabal",
-        "shadow government", "elite control", "jewish control", "zionist control"
+        "globalist", "cabal", "shadow government", "media control",
+        "elite control", "jewish control", "zionist control", "replacement"
     ],
     "identity-based hostility": [
-        "jewish", "jews", "zionist", "religion", "ethnic", "identity", "minority",
-        "bigot", "racist", "hate group"
+        "jewish", "jews", "zionist", "religion", "ethnic",
+        "minority", "bigot", "racist", "hate group"
     ],
     "political amplification": [
-        "election", "government", "policy", "party", "president", "politics",
-        "senate", "congress", "left wing", "right wing"
+        "election", "government", "policy", "party", "president",
+        "politics", "senate", "congress", "left wing", "right wing"
     ],
     "harassment / abuse": [
         "harassment", "abuse", "targeting", "bullying", "hostility",
         "slur", "dogwhistle", "mocking", "insult"
     ],
     "threats / incitement": [
-        "kill", "attack", "violent", "violence", "threat", "murder",
-        "burn", "shoot", "wipe out", "hurt them"
+        "kill", "attack", "violent", "violence", "threat",
+        "murder", "burn", "shoot", "wipe out", "hurt them"
     ],
     "misinformation / false claims": [
         "fake", "hoax", "lie", "false flag", "misinformation",
@@ -35,8 +35,8 @@ TOPIC_RULES = {
         "peace", "community", "safety", "defend"
     ],
     "news / event discussion": [
-        "reported", "incident", "event", "news", "article", "happened",
-        "coverage", "statement", "breaking"
+        "reported", "incident", "event", "news", "article",
+        "happened", "coverage", "statement", "breaking"
     ],
 }
 
@@ -113,16 +113,15 @@ def classify_relevance(text, query):
         return "relevant"
 
     matches = sum(1 for w in query_words if w in text)
-
     if matches > 0:
         return "relevant"
 
-    antisemitism_related_terms = [
-        "jewish", "jews", "antisemitic", "antisemitism", "zionist",
-        "synagogue", "hate crime", "religious targeting"
+    related_terms = [
+        "jewish", "jews", "antisemitic", "antisemitism",
+        "zionist", "synagogue", "hate crime", "religious targeting"
     ]
 
-    related_matches = count_matches(text, antisemitism_related_terms)
+    related_matches = count_matches(text, related_terms)
     return "relevant" if related_matches > 0 else "not relevant"
 
 
